@@ -1,7 +1,8 @@
-import { Badge, Box, Card, HStack, Heading, SimpleGrid, Stack, Table, Text } from "@chakra-ui/react";
+import { Box, HStack, SimpleGrid, Stack, Table, Text } from "@chakra-ui/react";
 import { CorrectionForm } from "@/components/CorrectionForm";
 import { LearningPassButton } from "@/components/LearningPassButton";
 import { RuleActions } from "@/components/RuleActions";
+import { EmptyState, PageHeader, Panel, StatCard, StatusBadge, Td, Th } from "@/components/layout";
 import { verifyGraph } from "@/graph/client";
 import { listCorrections, listRules, stats } from "@/services/tastelock";
 
@@ -11,139 +12,101 @@ export default async function OverviewPage() {
   const graph = await verifyGraph();
 
   const [tally, candidates, corrections] = graph.ok
-    ? await Promise.all([stats(), listRules({ status: "candidate" }), listCorrections({ limit: 8 })])
+    ? await Promise.all([stats(), listRules({ status: "candidate" }), listCorrections({ limit: 6 })])
     : [null, [], []];
 
   return (
-    <Stack gap="8">
-      <Stack gap="2">
-        <Heading size="xl">Overview</Heading>
-        <Text fontSize="sm" color="fg.muted">
-          Corrections become rules. Nothing activates without validation.
-        </Text>
-        <HStack gap="2">
-          <Badge colorPalette={graph.ok ? "teal" : "red"} variant="subtle">
-            {graph.ok ? "graph connected" : "graph unavailable"}
-          </Badge>
-          {!graph.ok && (
-            <Text fontSize="xs" color="fg.muted">
-              {graph.detail}
-            </Text>
-          )}
-        </HStack>
-      </Stack>
+    <Stack gap="6">
+      <PageHeader
+        title="Overview"
+        description="Corrections become rules. Nothing activates until a person validates it."
+        action={
+          <HStack gap="2">
+            <StatusBadge tone={graph.ok ? "teal" : "red"}>{graph.ok ? "graph connected" : "graph offline"}</StatusBadge>
+            <LearningPassButton />
+          </HStack>
+        }
+      />
 
       <SimpleGrid columns={{ base: 2, lg: 4 }} gap="4">
-        {[
-          { label: "Corrections", value: String(tally?.corrections ?? 0) },
-          { label: "Validated rules", value: String(tally?.rules.validated ?? 0) },
-          { label: "Candidates", value: String(tally?.rules.candidates ?? 0) },
-          { label: "Retired", value: String(tally?.rules.retired ?? 0) },
-        ].map((stat) => (
-          <Card.Root key={stat.label} variant="subtle">
-            <Card.Body gap="1">
-              <Text fontSize="xs" color="fg.muted">
-                {stat.label}
-              </Text>
-              <Heading size="lg">{stat.value}</Heading>
-            </Card.Body>
-          </Card.Root>
-        ))}
+        <StatCard label="Corrections" value={String(tally?.corrections ?? 0)} accent="blue.solid" />
+        <StatCard label="Validated rules" value={String(tally?.rules.validated ?? 0)} accent="teal.solid" />
+        <StatCard label="Candidates" value={String(tally?.rules.candidates ?? 0)} accent="orange.solid" />
+        <StatCard label="Retired" value={String(tally?.rules.retired ?? 0)} accent="gray.400" />
       </SimpleGrid>
 
-      <Card.Root variant="outline">
-        <Card.Header>
-          <Heading size="sm">Add a correction</Heading>
-        </Card.Header>
-        <Card.Body>
+      <SimpleGrid columns={{ base: 1, lg: 2 }} gap="6" alignItems="start">
+        <Panel title="Add a correction" description="What an agent got wrong, and what you wanted.">
           <CorrectionForm compact />
-        </Card.Body>
-      </Card.Root>
+        </Panel>
 
-      <Card.Root variant="outline">
-        <Card.Header>
-          <Heading size="sm">Learning pass</Heading>
-        </Card.Header>
-        <Card.Body gap="3">
-          <Text fontSize="sm" color="fg.muted">
-            Reads recent corrections and proposes candidate rules. Duplicates are skipped. Proposals stay inactive
-            until you validate them below.
-          </Text>
-          <LearningPassButton />
-        </Card.Body>
-      </Card.Root>
+        <Panel
+          title="Candidates awaiting review"
+          description="Proposed by the learning pass. Validate to activate for every agent."
+        >
+          {candidates.length === 0 ? (
+            <EmptyState
+              title="No candidates"
+              description="Record a few corrections, then run the learning pass to get proposals."
+            />
+          ) : (
+            <Stack gap="3">
+              {candidates.map((rule) => (
+                <Box key={rule.id} borderWidth="1px" borderColor="border.muted" borderRadius="md" padding="3">
+                  <Text fontSize="sm" marginBottom="2">
+                    {rule.text}
+                  </Text>
+                  <HStack justify="space-between" gap="3" flexWrap="wrap">
+                    <HStack gap="3">
+                      <StatusBadge tone="orange">{rule.scope}</StatusBadge>
+                      <Text fontSize="xs" color="fg.muted">
+                        confidence {rule.confidence.toFixed(2)}
+                      </Text>
+                      <Text fontSize="xs" color="fg.muted">
+                        support {rule.support}
+                      </Text>
+                    </HStack>
+                    <RuleActions ruleId={rule.id} status={rule.status} />
+                  </HStack>
+                </Box>
+              ))}
+            </Stack>
+          )}
+        </Panel>
+      </SimpleGrid>
 
-      <Stack gap="4">
-        <Heading size="md">Candidates awaiting review</Heading>
-        {candidates.length === 0 ? (
-          <Text fontSize="sm" color="fg.muted">
-            No candidates. Run the learning pass after recording some corrections.
-          </Text>
-        ) : (
-          <Box overflowX="auto">
-            <Table.Root size="sm" variant="line" minWidth="720px">
-              <Table.Header>
-                <Table.Row>
-                  <Table.ColumnHeader>Rule</Table.ColumnHeader>
-                  <Table.ColumnHeader>Scope</Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="end">Confidence</Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="end">Support</Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="end">Decision</Table.ColumnHeader>
-                </Table.Row>
-              </Table.Header>
-              <Table.Body>
-                {candidates.map((rule) => (
-                  <Table.Row key={rule.id}>
-                    <Table.Cell>{rule.text}</Table.Cell>
-                    <Table.Cell color="fg.muted">{rule.scope}</Table.Cell>
-                    <Table.Cell textAlign="end">{rule.confidence.toFixed(2)}</Table.Cell>
-                    <Table.Cell textAlign="end">{rule.support}</Table.Cell>
-                    <Table.Cell>
-                      <RuleActions ruleId={rule.id} status={rule.status} />
-                    </Table.Cell>
-                  </Table.Row>
-                ))}
-              </Table.Body>
-            </Table.Root>
-          </Box>
-        )}
-      </Stack>
-
-      <Stack gap="4">
-        <Heading size="md">Recent corrections</Heading>
+      <Panel title="Recent corrections" padded={false}>
         {corrections.length === 0 ? (
-          <Text fontSize="sm" color="fg.muted">
-            Nothing recorded yet.
-          </Text>
+          <Box paddingX="5" paddingBottom="2">
+            <EmptyState title="Nothing recorded yet" description="Corrections appear here as soon as an agent records one." />
+          </Box>
         ) : (
-          <Box overflowX="auto">
+          <Box overflowX="auto" paddingX="5" paddingY="2">
             <Table.Root size="sm" variant="line" minWidth="720px">
               <Table.Header>
                 <Table.Row>
-                  <Table.ColumnHeader>Instruction</Table.ColumnHeader>
-                  <Table.ColumnHeader>Scope</Table.ColumnHeader>
-                  <Table.ColumnHeader>Agent</Table.ColumnHeader>
-                  <Table.ColumnHeader>Recorded</Table.ColumnHeader>
+                  <Th>Instruction</Th>
+                  <Th>Scope</Th>
+                  <Th>Agent</Th>
+                  <Th align="end">Recorded</Th>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
                 {corrections.map((correction) => (
-                  <Table.Row key={correction.id}>
-                    <Table.Cell>
-                      {correction.instruction ?? correction.corrected ?? correction.original ?? correction.id}
-                    </Table.Cell>
-                    <Table.Cell color="fg.muted">{correction.scope}</Table.Cell>
-                    <Table.Cell color="fg.muted">
-                      {correction.agent} ({correction.agentKind})
-                    </Table.Cell>
-                    <Table.Cell color="fg.muted">{new Date(correction.createdAt).toLocaleString()}</Table.Cell>
+                  <Table.Row key={correction.id} _hover={{ background: "bg.subtle" }}>
+                    <Td wrap>{correction.instruction ?? correction.corrected ?? correction.original ?? correction.id}</Td>
+                    <Td muted>{correction.scope}</Td>
+                    <Td muted>{correction.agent}</Td>
+                    <Td align="end" muted>
+                      {new Date(correction.createdAt).toLocaleString()}
+                    </Td>
                   </Table.Row>
                 ))}
               </Table.Body>
             </Table.Root>
           </Box>
         )}
-      </Stack>
+      </Panel>
     </Stack>
   );
 }

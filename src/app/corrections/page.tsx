@@ -1,5 +1,6 @@
-import { Box, Button, Card, HStack, Heading, Input, Stack, Table, Text } from "@chakra-ui/react";
+import { Box, Button, HStack, Input, Stack, Table, Text } from "@chakra-ui/react";
 import { CorrectionForm } from "@/components/CorrectionForm";
+import { EmptyState, PageHeader, Panel, Td, Th } from "@/components/layout";
 import { listCorrections } from "@/services/tastelock";
 
 export const dynamic = "force-dynamic";
@@ -11,90 +12,92 @@ export default async function CorrectionsPage({
 }) {
   const { q } = await searchParams;
   const query = q?.trim() ?? "";
+  const all = await listCorrections({ limit: 200 });
   const corrections = query
-    ? await listCorrections({ limit: 200 }).then((rows) =>
-        rows.filter((row) =>
-          [
-            row.instruction ?? "",
-            row.original ?? "",
-            row.corrected ?? "",
-            row.agent,
-            row.scope,
-            row.tags.join(" "),
-          ]
-            .join(" ")
-            .toLowerCase()
-            .includes(query.toLowerCase()),
-        ),
+    ? all.filter((row) =>
+        [row.instruction ?? "", row.original ?? "", row.corrected ?? "", row.agent, row.scope, row.tags.join(" ")]
+          .join(" ")
+          .toLowerCase()
+          .includes(query.toLowerCase()),
       )
-    : await listCorrections({ limit: 200 });
+    : all;
 
   return (
-    <Stack gap="8">
-      <Stack gap="2">
-        <Heading size="xl">Corrections</Heading>
-        <Text fontSize="sm" color="fg.muted">
-          Every correction an agent recorded, newest first. This is the evidence rules are built from.
-        </Text>
-      </Stack>
+    <Stack gap="6">
+      <PageHeader
+        title="Corrections"
+        description="Every correction an agent recorded. This is the evidence rules are built from."
+      />
 
-      <Card.Root variant="outline">
-        <Card.Header>
-          <Heading size="sm">Record a correction</Heading>
-        </Card.Header>
-        <Card.Body>
-          <CorrectionForm />
-        </Card.Body>
-      </Card.Root>
+      <Panel title="Record a correction" description="Available to you as well as to agents.">
+        <CorrectionForm />
+      </Panel>
 
-      <Stack gap="4">
-        <HStack justify="space-between" flexWrap="wrap" gap="3">
-          <Heading size="md">Recorded ({corrections.length})</Heading>
+      <Panel
+        title={`Recorded (${corrections.length})`}
+        description={query ? `Filtered by "${query}"` : undefined}
+        action={
           <form action="/corrections" method="get">
             <HStack gap="2">
-              <Input size="sm" name="q" defaultValue={query} placeholder="Search corrections" width="240px" />
+              <Input size="sm" name="q" defaultValue={query} placeholder="Search" width="200px" />
               <Button size="sm" type="submit" variant="outline">
                 Search
               </Button>
             </HStack>
           </form>
-        </HStack>
-
+        }
+        padded={false}
+      >
         {corrections.length === 0 ? (
-          <Text fontSize="sm" color="fg.muted">
-            {query ? "No corrections match that search." : "Nothing recorded yet."}
-          </Text>
+          <Box paddingX="5" paddingBottom="2">
+            <EmptyState
+              title={query ? "No matches" : "Nothing recorded yet"}
+              description={
+                query
+                  ? "Try a different word, or clear the search."
+                  : "Record a correction above, or let an agent record one over MCP."
+              }
+            />
+          </Box>
         ) : (
-          <Box overflowX="auto">
-            <Table.Root size="sm" variant="line" minWidth="900px">
+          <Box overflowX="auto" paddingX="5" paddingY="2">
+            <Table.Root size="sm" variant="line" minWidth="960px">
               <Table.Header>
                 <Table.Row>
-                  <Table.ColumnHeader>Instruction</Table.ColumnHeader>
-                  <Table.ColumnHeader>Agent did</Table.ColumnHeader>
-                  <Table.ColumnHeader>Should have done</Table.ColumnHeader>
-                  <Table.ColumnHeader>Scope</Table.ColumnHeader>
-                  <Table.ColumnHeader>Agent</Table.ColumnHeader>
-                  <Table.ColumnHeader>Recorded</Table.ColumnHeader>
+                  <Th>Instruction</Th>
+                  <Th>Agent did</Th>
+                  <Th>Should have done</Th>
+                  <Th>Scope</Th>
+                  <Th>Agent</Th>
+                  <Th align="end">Recorded</Th>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
                 {corrections.map((correction) => (
-                  <Table.Row key={correction.id}>
-                    <Table.Cell>{correction.instruction ?? correction.id}</Table.Cell>
-                    <Table.Cell color="fg.muted">{correction.original ?? ""}</Table.Cell>
-                    <Table.Cell color="fg.muted">{correction.corrected ?? ""}</Table.Cell>
-                    <Table.Cell color="fg.muted">{correction.scope}</Table.Cell>
-                    <Table.Cell color="fg.muted">
-                      {correction.agent} ({correction.agentKind})
-                    </Table.Cell>
-                    <Table.Cell color="fg.muted">{new Date(correction.createdAt).toLocaleString()}</Table.Cell>
+                  <Table.Row key={correction.id} _hover={{ background: "bg.subtle" }}>
+                    <Td wrap>{correction.instruction ?? correction.id}</Td>
+                    <Td wrap muted>
+                      {correction.original ?? ""}
+                    </Td>
+                    <Td wrap muted>
+                      {correction.corrected ?? ""}
+                    </Td>
+                    <Td muted>{correction.scope}</Td>
+                    <Td muted>{correction.agent}</Td>
+                    <Td align="end" muted>
+                      {new Date(correction.createdAt).toLocaleString()}
+                    </Td>
                   </Table.Row>
                 ))}
               </Table.Body>
             </Table.Root>
           </Box>
         )}
-      </Stack>
+      </Panel>
+
+      <Text fontSize="xs" color="fg.muted">
+        Showing up to 200 corrections, newest first.
+      </Text>
     </Stack>
   );
 }

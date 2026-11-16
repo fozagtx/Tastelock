@@ -1,11 +1,12 @@
-import { Badge, Box, Button, HStack, Heading, Link, Stack, Table, Text } from "@chakra-ui/react";
+import { Box, Button, HStack, Link, Stack, Table } from "@chakra-ui/react";
 import { RuleActions } from "@/components/RuleActions";
+import { EmptyState, PageHeader, Panel, StatusBadge, Td, Th } from "@/components/layout";
 import type { LearnedRuleStatus } from "@/contracts";
 import { listRules } from "@/services/tastelock";
 
 export const dynamic = "force-dynamic";
 
-const FILTERS: { value: string; label: string }[] = [
+const FILTERS = [
   { value: "candidate", label: "Candidates" },
   { value: "validated", label: "Validated" },
   { value: "retired", label: "Retired" },
@@ -28,70 +29,72 @@ export default async function RulesPage({
   const rules = await listRules(active === "all" ? {} : { status: active as LearnedRuleStatus });
 
   return (
-    <Stack gap="8">
-      <Stack gap="2">
-        <Heading size="xl">Rules</Heading>
-        <Text fontSize="sm" color="fg.muted">
-          Validated rules are read by every connected agent. Candidates wait for your decision.
-        </Text>
-      </Stack>
+    <Stack gap="6">
+      <PageHeader
+        title="Rules"
+        description="Validated rules are read by every connected agent. Candidates wait for your decision."
+        action={
+          <HStack gap="2" flexWrap="wrap">
+            {FILTERS.map((filter) => (
+              <Button
+                key={filter.value}
+                asChild
+                size="sm"
+                variant={active === filter.value ? "solid" : "outline"}
+                colorPalette={active === filter.value ? "teal" : "gray"}
+              >
+                <Link href={`/rules?status=${filter.value}`}>{filter.label}</Link>
+              </Button>
+            ))}
+          </HStack>
+        }
+      />
 
-      <HStack gap="2" flexWrap="wrap">
-        {FILTERS.map((filter) => (
-          <Button
-            key={filter.value}
-            asChild
-            size="sm"
-            variant={active === filter.value ? "solid" : "outline"}
-            colorPalette={active === filter.value ? "teal" : "gray"}
-          >
-            <Link href={`/rules?status=${filter.value}`}>{filter.label}</Link>
-          </Button>
-        ))}
-      </HStack>
-
-      {rules.length === 0 ? (
-        <Text fontSize="sm" color="fg.muted">
-          No {active === "all" ? "" : active} rules.
-        </Text>
-      ) : (
-        <Box overflowX="auto">
-          <Table.Root size="sm" variant="line" minWidth="900px">
-            <Table.Header>
-              <Table.Row>
-                <Table.ColumnHeader>Rule</Table.ColumnHeader>
-                <Table.ColumnHeader>Status</Table.ColumnHeader>
-                <Table.ColumnHeader>Scope</Table.ColumnHeader>
-                <Table.ColumnHeader textAlign="end">Confidence</Table.ColumnHeader>
-                <Table.ColumnHeader textAlign="end">Support</Table.ColumnHeader>
-                <Table.ColumnHeader textAlign="end">Evidence</Table.ColumnHeader>
-                <Table.ColumnHeader textAlign="end">Decision</Table.ColumnHeader>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {rules.map((rule) => (
-                <Table.Row key={rule.id}>
-                  <Table.Cell>{rule.text}</Table.Cell>
-                  <Table.Cell>
-                    <Badge colorPalette={TONE[rule.status]} variant="subtle">
-                      {rule.status}
-                    </Badge>
-                  </Table.Cell>
-                  <Table.Cell color="fg.muted">{rule.scope}</Table.Cell>
-                  <Table.Cell textAlign="end">{rule.confidence.toFixed(2)}</Table.Cell>
-                  <Table.Cell textAlign="end">{rule.support}</Table.Cell>
-                  <Table.Cell textAlign="end" color="fg.muted">
-                    {rule.derivedFrom.length} correction(s)
-                  </Table.Cell>
-                  <Table.Cell>
-                    <RuleActions ruleId={rule.id} status={rule.status} />
-                  </Table.Cell>
+      <Panel title={`${rules.length} ${active === "all" ? "" : active} rule(s)`} padded={false}>
+        {rules.length === 0 ? (
+          <Box paddingX="5" paddingBottom="2">
+            <EmptyState
+              title={`No ${active === "all" ? "" : active} rules`}
+              description="Run the learning pass on the Overview page to generate candidates."
+            />
+          </Box>
+        ) : (
+          <Box overflowX="auto" paddingX="5" paddingY="2">
+            <Table.Root size="sm" variant="line" minWidth="980px">
+              <Table.Header>
+                <Table.Row>
+                  <Th>Rule</Th>
+                  <Th>Status</Th>
+                  <Th>Scope</Th>
+                  <Th align="end">Confidence</Th>
+                  <Th align="end">Support</Th>
+                  <Th align="end">Evidence</Th>
+                  <Th align="end">Decision</Th>
                 </Table.Row>
-              ))}
-            </Table.Body>
-          </Table.Root>
-        </Box>
-      )}
+              </Table.Header>
+              <Table.Body>
+                {rules.map((rule) => (
+                  <Table.Row key={rule.id} _hover={{ background: "bg.subtle" }}>
+                    <Td wrap>{rule.text}</Td>
+                    <Td>
+                      <StatusBadge tone={TONE[rule.status]}>{rule.status}</StatusBadge>
+                    </Td>
+                    <Td muted>{rule.scope}</Td>
+                    <Td align="end">{rule.confidence.toFixed(2)}</Td>
+                    <Td align="end">{rule.support}</Td>
+                    <Td align="end" muted>
+                      {rule.derivedFrom.length}
+                    </Td>
+                    <Td>
+                      <RuleActions ruleId={rule.id} status={rule.status} />
+                    </Td>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table.Root>
+          </Box>
+        )}
+      </Panel>
     </Stack>
   );
 }

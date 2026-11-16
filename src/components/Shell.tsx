@@ -5,22 +5,30 @@ import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV = [
-  { href: "/", label: "Overview", hint: "counts and review" },
-  { href: "/corrections", label: "Corrections", hint: "what agents got wrong" },
-  { href: "/rules", label: "Rules", hint: "validate or retire" },
-  { href: "/export", label: "Export", hint: "bundle for other agents" },
-  { href: "/connect", label: "Connect", hint: "MCP and integrations" },
+  { href: "/", label: "Overview" },
+  { href: "/corrections", label: "Corrections" },
+  { href: "/rules", label: "Rules" },
+  { href: "/export", label: "Export" },
+  { href: "/connect", label: "Connect" },
 ];
 
 function Mark() {
   return (
-    <Box color="teal.solid" flexShrink="0" lineHeight="0">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth={1.8}>
+    <Flex
+      width="30px"
+      height="30px"
+      borderRadius="lg"
+      background="teal.solid"
+      color="white"
+      align="center"
+      justify="center"
+      flexShrink="0"
+    >
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2}>
         <rect x="4" y="10" width="16" height="10" rx="2" />
         <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-        <circle cx="12" cy="15" r="1.4" fill="currentColor" stroke="none" />
       </svg>
-    </Box>
+    </Flex>
   );
 }
 
@@ -31,15 +39,19 @@ export function Shell({ children }: { children: React.ReactNode }) {
     <Flex direction={{ base: "column", md: "row" }} minHeight="100vh">
       <Box
         as="aside"
-        width={{ base: "full", md: "236px" }}
+        width={{ base: "full", md: "232px" }}
         flexShrink="0"
+        background="white"
         borderRightWidth={{ base: "0", md: "1px" }}
         borderBottomWidth={{ base: "1px", md: "0" }}
         borderColor="border.muted"
-        paddingX={{ base: "4", md: "5" }}
+        paddingX="4"
         paddingY="5"
+        position={{ base: "static", md: "sticky" }}
+        top="0"
+        height={{ base: "auto", md: "100vh" }}
       >
-        <HStack gap="2" align="center">
+        <HStack gap="2.5" align="center" paddingX="2">
           <Mark />
           <Stack gap="0">
             <Heading size="sm" letterSpacing="tight">
@@ -67,28 +79,23 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 paddingX="3"
                 paddingY="2"
                 borderRadius="md"
+                fontSize="sm"
                 background={active ? "bg.subtle" : "transparent"}
                 color={active ? "fg" : "fg.muted"}
+                fontWeight={active ? "semibold" : "normal"}
                 _hover={{ background: "bg.subtle", textDecoration: "none" }}
               >
-                <NextLink href={item.href}>
-                  <Stack gap="0">
-                    <Text fontSize="sm" fontWeight={active ? "semibold" : "medium"}>
-                      {item.label}
-                    </Text>
-                    <Text fontSize="xs" color="fg.subtle">
-                      {item.hint}
-                    </Text>
-                  </Stack>
-                </NextLink>
+                <NextLink href={item.href}>{item.label}</NextLink>
               </Link>
             );
           })}
         </Stack>
       </Box>
 
-      <Box flex="1" minWidth="0" paddingX={{ base: "4", md: "8" }} paddingY="8">
-        <Box maxWidth="1000px">{children}</Box>
+      <Box flex="1" minWidth="0" paddingX={{ base: "4", md: "10" }} paddingY={{ base: "6", md: "9" }}>
+        <Box maxWidth="1040px" margin="0 auto">
+          {children}
+        </Box>
       </Box>
     </Flex>
   );

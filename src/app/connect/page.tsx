@@ -1,19 +1,24 @@
-import { Badge, Box, Card, HStack, Heading, Stack, Table, Text } from "@chakra-ui/react";
+import { Alert, Badge, Box, HStack, Stack, Table, Text } from "@chakra-ui/react";
 import { CodeBlock } from "@/components/CodeBlock";
 import { CopyButton } from "@/components/CopyButton";
+import { TokenReveal } from "@/components/TokenReveal";
+import { PageHeader, Panel, StatusBadge, Td, Th } from "@/components/layout";
+import { env } from "@/env";
 
 export const dynamic = "force-dynamic";
 
 const ENDPOINT = "https://tastelock.vercel.app/api/mcp";
 
 export default function ConnectPage() {
+  const token = env().TASTELOCK_API_TOKEN;
+
   const claudeHttp = JSON.stringify(
     {
       mcpServers: {
         tastelock: {
           type: "http",
           url: ENDPOINT,
-          headers: { Authorization: "Bearer TASTELOCK_API_TOKEN" },
+          headers: { Authorization: `Bearer ${token}` },
         },
       },
     },
@@ -39,127 +44,119 @@ command = "npx"
 args = ["tsx", "/path/to/tastelock/src/mcp/server.ts"]`;
 
   const curlCheck = `curl -s -X POST ${ENDPOINT} \\
-  -H "Authorization: Bearer $TASTELOCK_API_TOKEN" \\
+  -H "Authorization: Bearer ${token}" \\
   -H "Content-Type: application/json" \\
   -H "Accept: application/json, text/event-stream" \\
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'`;
 
   return (
-    <Stack gap="8">
-      <Stack gap="2">
-        <Heading size="xl">Connect</Heading>
-        <Text fontSize="sm" color="fg.muted">
-          The MCP server runs two ways: hosted over HTTP for anything that can make a request, or locally over stdio
-          for agents that prefer a local process.
-        </Text>
-      </Stack>
+    <Stack gap="6">
+      <PageHeader
+        title="Connect"
+        description="TasteLock runs two ways: hosted over HTTP for anything that can make a request, or locally over stdio for agents that prefer a local process."
+      />
 
-      <Card.Root variant="outline">
-        <Card.Header>
-          <HStack justify="space-between" flexWrap="wrap" gap="3">
-            <Heading size="sm">Hosted endpoint</Heading>
-            <CopyButton value={ENDPOINT} label="Copy URL" />
-          </HStack>
-        </Card.Header>
-        <Card.Body gap="4">
-          <Stack gap="1">
-            <Text fontSize="sm" fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace">
-              {ENDPOINT}
-            </Text>
-            <Text fontSize="xs" color="fg.muted">
-              POST only, stateless, JSON responses. Requires the token from this project's <b>.env</b>, also stored as
-              a Vercel secret.
-            </Text>
-          </Stack>
-          <CodeBlock>{curlCheck}</CodeBlock>
-          <Text fontSize="xs" color="fg.muted">
-            Without the token the endpoint answers 401 and nothing is written.
+      <Panel
+        title="Hosted endpoint"
+        description="POST only, stateless, JSON responses."
+        action={<CopyButton value={ENDPOINT} label="Copy URL" />}
+      >
+        <Stack gap="4">
+          <Text fontSize="sm" fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace">
+            {ENDPOINT}
           </Text>
-        </Card.Body>
-      </Card.Root>
+          <CodeBlock>{curlCheck}</CodeBlock>
+        </Stack>
+      </Panel>
 
-      <Stack gap="4">
-        <Heading size="md">Coding agents</Heading>
-        <Table.Root size="sm" variant="line">
-          <Table.Header>
-            <Table.Row>
-              <Table.ColumnHeader>Client</Table.ColumnHeader>
-              <Table.ColumnHeader>Transport</Table.ColumnHeader>
-              <Table.ColumnHeader>Where it goes</Table.ColumnHeader>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
-            <Table.Row>
-              <Table.Cell>Claude Code</Table.Cell>
-              <Table.Cell>HTTP</Table.Cell>
-              <Table.Cell color="fg.muted">.mcp.json in a project, or ~/.claude.json</Table.Cell>
-            </Table.Row>
-            <Table.Row>
-              <Table.Cell>Claude Code</Table.Cell>
-              <Table.Cell>stdio</Table.Cell>
-              <Table.Cell color="fg.muted">Same files, with a local command</Table.Cell>
-            </Table.Row>
-            <Table.Row>
-              <Table.Cell>Codex</Table.Cell>
-              <Table.Cell>stdio</Table.Cell>
-              <Table.Cell color="fg.muted">~/.codex/config.toml</Table.Cell>
-            </Table.Row>
-            <Table.Row>
-              <Table.Cell>Any other MCP client</Table.Cell>
-              <Table.Cell>HTTP</Table.Cell>
-              <Table.Cell color="fg.muted">The URL above plus the bearer header</Table.Cell>
-            </Table.Row>
-          </Table.Body>
-        </Table.Root>
-      </Stack>
+      <Panel
+        title="The token"
+        description="This is just a password for the URL above. Without it, anyone who finds the link could write to your graph."
+      >
+        <Stack gap="3">
+          <TokenReveal token={token} />
+          <Alert.Root status="warning" size="sm">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Description fontSize="xs">
+                Because this page is not itself protected, revealing the token here shows it to anyone who opens this
+                page. It is the same value in this project's .env and in Vercel. Ask me and I will gate the dashboard
+                behind the token, or rotate it.
+              </Alert.Description>
+            </Alert.Content>
+          </Alert.Root>
+        </Stack>
+      </Panel>
 
-      <Stack gap="3">
-        <HStack gap="2">
-          <Heading size="sm">Claude Code, hosted</Heading>
-          <Badge colorPalette="teal" variant="subtle" fontSize="xs">
-            no repo needed
-          </Badge>
-        </HStack>
+      <Panel title="Coding agents" padded={false}>
+        <Box overflowX="auto" paddingX="5" paddingY="2">
+          <Table.Root size="sm" variant="line" minWidth="720px">
+            <Table.Header>
+              <Table.Row>
+                <Th>Client</Th>
+                <Th>Transport</Th>
+                <Th>Where it goes</Th>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              <Table.Row _hover={{ background: "bg.subtle" }}>
+                <Td>Claude Code</Td>
+                <Td>
+                  <StatusBadge tone="teal">HTTP</StatusBadge>
+                </Td>
+                <Td muted>.mcp.json in a project, or ~/.claude.json</Td>
+              </Table.Row>
+              <Table.Row _hover={{ background: "bg.subtle" }}>
+                <Td>Claude Code</Td>
+                <Td>
+                  <StatusBadge tone="gray">stdio</StatusBadge>
+                </Td>
+                <Td muted>Same files, with a local command</Td>
+              </Table.Row>
+              <Table.Row _hover={{ background: "bg.subtle" }}>
+                <Td>Codex</Td>
+                <Td>
+                  <StatusBadge tone="gray">stdio</StatusBadge>
+                </Td>
+                <Td muted>~/.codex/config.toml</Td>
+              </Table.Row>
+              <Table.Row _hover={{ background: "bg.subtle" }}>
+                <Td>Any other MCP client</Td>
+                <Td>
+                  <StatusBadge tone="teal">HTTP</StatusBadge>
+                </Td>
+                <Td muted>The URL above with a bearer header</Td>
+              </Table.Row>
+            </Table.Body>
+          </Table.Root>
+        </Box>
+      </Panel>
+
+      <Panel title="Claude Code, hosted" description="No clone needed. Paste this into .mcp.json." action={<CopyButton value={claudeHttp} />}>
         <CodeBlock>{claudeHttp}</CodeBlock>
-        <Text fontSize="xs" color="fg.muted">
-          Replace TASTELOCK_API_TOKEN with the value from .env.
-        </Text>
-      </Stack>
+      </Panel>
 
-      <Stack gap="3">
-        <Heading size="sm">Claude Code, local stdio</Heading>
+      <Panel title="Claude Code, local stdio" description="Needs the repository present." action={<CopyButton value={stdio} />}>
         <CodeBlock>{stdio}</CodeBlock>
-      </Stack>
+      </Panel>
 
-      <Stack gap="3">
-        <Heading size="sm">Codex, local stdio</Heading>
+      <Panel title="Codex, local stdio" description="Goes in ~/.codex/config.toml." action={<CopyButton value={codexStdio} />}>
         <CodeBlock>{codexStdio}</CodeBlock>
-      </Stack>
+      </Panel>
 
-      <Card.Root variant="outline">
-        <Card.Header>
+      <Panel title="Slack" description="Not built. No config, because nothing exists to point at.">
+        <Stack gap="2">
           <HStack gap="2">
-            <Heading size="sm">Slack</Heading>
-            <Badge colorPalette="gray" variant="subtle" fontSize="xs">
+            <Badge colorPalette="gray" variant="subtle" borderRadius="full">
               not built
             </Badge>
           </HStack>
-        </Card.Header>
-        <Card.Body>
           <Text fontSize="sm" color="fg.muted">
-            There is no Slack integration in this codebase, and I am not going to list a config for one that does not
-            exist. The tools are reachable over HTTP with a token, so a Slack app could call the same endpoint with a
-            slash command or a workflow step. Say the word and I will build it.
+            The tools are reachable over HTTP with the token, so a Slack app could call the same endpoint from a slash
+            command or a workflow step. Say the word and I will build it rather than describe it.
           </Text>
-        </Card.Body>
-      </Card.Root>
-
-      <Box>
-        <Text fontSize="xs" color="fg.muted">
-          The tools themselves are listed in the README, and every write goes through the same validation gate: an
-          agent can propose, only a person activates.
-        </Text>
-      </Box>
+        </Stack>
+      </Panel>
     </Stack>
   );
 }
