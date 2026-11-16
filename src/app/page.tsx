@@ -38,7 +38,8 @@ function CodeBlock({ children }: { children: string }) {
 }
 
 export default async function Home() {
-  const repoRoot = process.cwd();
+  const hosted = Boolean(process.env.VERCEL);
+  const repoRoot = hosted ? "/path/to/tastelock" : process.cwd();
   const graph = await verifyGraph();
 
   const [tally, validatedRules, corrections, bundle] = graph.ok
@@ -209,8 +210,9 @@ args = ["tsx", "${repoRoot}/src/mcp/server.ts"]`;
           </Stack>
         </SimpleGrid>
         <Text fontSize="xs" color="whiteAlpha.600">
-          The server reads HydraDB and SERV settings from {repoRoot}/.env, so it works no matter which directory the
-          agent launches it from.
+          {hosted
+            ? "Replace /path/to/tastelock with the directory where you cloned the repo. The server reads HydraDB and SERV settings from that directory's .env, so it works from any working directory."
+            : `The server reads HydraDB and SERV settings from ${repoRoot}/.env, so it works no matter which directory the agent launches it from.`}
         </Text>
       </Stack>
 

@@ -16,7 +16,8 @@ export function graphDriver(): Driver {
     driver = neo4j.driver(e.HYDRADB_URI, auth, {
       disableLosslessIntegers: true,
       maxConnectionPoolSize: 20,
-      connectionAcquisitionTimeout: 15_000,
+      connectionTimeout: 8_000,
+      connectionAcquisitionTimeout: 8_000,
     });
   }
   return driver;
@@ -40,6 +41,14 @@ export async function runQuery(
 }
 
 export async function verifyGraph(): Promise<{ ok: boolean; detail: string }> {
+  const e = env();
+  if (process.env.VERCEL && /(127\.0\.0\.1|localhost)/.test(e.HYDRADB_URI)) {
+    return {
+      ok: false,
+      detail:
+        "HydraDB runs next to your agents, not on Vercel. Set HYDRADB_URI to a reachable graph-node (with TLS) to light this page up.",
+    };
+  }
   try {
     await graphDriver().verifyConnectivity();
     return { ok: true, detail: "connected" };
