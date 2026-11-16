@@ -113,7 +113,7 @@ export function DemoPanel() {
       </HStack>
 
       {message && (
-        <Text fontSize="xs" color={failed ? "red.300" : "teal.300"}>
+        <Text fontSize="xs" color={failed ? "red.solid" : "teal.solid"}>
           {message}
         </Text>
       )}
