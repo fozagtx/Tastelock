@@ -23,6 +23,7 @@ const EnvSchema = z.object({
   HYDRADB_NAMESPACE: z.string().default("default"),
   HYDRADB_GRAPH: z.string().default("default"),
   HYDRADB_CELL_ID: z.string().default("cell-0"),
+  HYDRADB_DATABASE: z.string().default(""),
 
   SERV_BASE_URL: z.string().default(""),
   SERV_API_KEY: z.string().default(""),
@@ -48,6 +49,7 @@ export function env(): ServerEnv {
       HYDRADB_NAMESPACE: process.env.HYDRADB_NAMESPACE,
       HYDRADB_GRAPH: process.env.HYDRADB_GRAPH,
       HYDRADB_CELL_ID: process.env.HYDRADB_CELL_ID,
+      HYDRADB_DATABASE: process.env.HYDRADB_DATABASE,
       SERV_BASE_URL: process.env.SERV_BASE_URL,
       SERV_API_KEY: process.env.SERV_API_KEY,
       SERV_MODEL: process.env.SERV_MODEL,

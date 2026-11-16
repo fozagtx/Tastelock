@@ -1,4 +1,4 @@
-import neo4j, { type Driver } from "neo4j-driver";
+import neo4j, { type Driver, type ManagedTransaction } from "neo4j-driver";
 import { env } from "@/env";
 
 let driver: Driver | null = null;
@@ -28,10 +28,11 @@ export async function runQuery(
   params: Record<string, unknown> = {},
   mode: "read" | "write" = "read",
 ): Promise<Record<string, unknown>[]> {
-  const session = graphDriver().session();
+  const database = env().HYDRADB_DATABASE;
+  const session = graphDriver().session(database ? { database } : {});
   try {
-    const work = async () => {
-      const result = await session.run(cypher, params);
+    const work = async (tx: ManagedTransaction) => {
+      const result = await tx.run(cypher, params);
       return result.records.map((record) => record.toObject());
     };
     return mode === "write" ? await session.executeWrite(work) : await session.executeRead(work);
