@@ -101,3 +101,7 @@ export function parseJson<T>(value: unknown, fallback: T): T {
 export function toJson(value: unknown): string {
   return JSON.stringify(value ?? null);
 }
+
+export function intParam(value: number): unknown {
+  return neo4j.int(Math.max(0, Math.trunc(value)));
+}

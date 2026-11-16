@@ -13,7 +13,7 @@ import {
   type LearnedRule,
   type LearnedRuleStatus,
 } from "@/contracts";
-import { asNumber, asString, nodeProps, parseJson, runQuery, toJson } from "./client";
+import { asNumber, asString, intParam, nodeProps, parseJson, runQuery, toJson } from "./client";
 
 const LABELS = new Set<string>(GRAPH_LABELS);
 const RELATIONSHIPS = new Set<string>(GRAPH_RELATIONSHIPS);
@@ -149,7 +149,7 @@ export async function listCorrections(options: {
   limit?: number;
 } = {}): Promise<Correction[]> {
   const clauses: string[] = [];
-  const params: Record<string, unknown> = { limit: Math.min(Math.max(options.limit ?? 50, 1), 300) };
+  const params: Record<string, unknown> = { limit: intParam(Math.min(Math.max(options.limit ?? 50, 1), 300)) };
   if (options.scope) {
     clauses.push("c.scope = $scope");
     params.scope = options.scope;
@@ -257,7 +257,7 @@ export async function listLearnedRules(options: {
   limit?: number;
 } = {}): Promise<LearnedRule[]> {
   const clauses: string[] = [];
-  const params: Record<string, unknown> = { limit: Math.min(Math.max(options.limit ?? 100, 1), 300) };
+  const params: Record<string, unknown> = { limit: intParam(Math.min(Math.max(options.limit ?? 100, 1), 300)) };
   if (options.status) {
     clauses.push("l.status = $status");
     params.status = options.status;
@@ -364,7 +364,7 @@ export async function recentAuditEvents(limit = 25): Promise<
     `MATCH (a:AuditEvent) RETURN a.id AS id, a.action AS action, a.actor AS actor,
       a.targetType AS targetType, a.targetId AS targetId, a.detail AS detail, a.createdAt AS createdAt
      ORDER BY a.createdAt DESC LIMIT $limit`,
-    { limit },
+    { limit: intParam(limit) },
   );
   return rows.map((row) => ({
     id: asString(row.id),
