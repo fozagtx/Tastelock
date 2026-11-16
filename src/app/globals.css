@@ -6,6 +6,8 @@ body {
 }
 
 body {
+  background: #ffffff;
+  color: #16181d;
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
 }

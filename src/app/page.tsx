@@ -11,7 +11,6 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { DemoPanel } from "@/components/DemoPanel";
-import { servConfigured } from "@/env";
 import { verifyGraph } from "@/graph/client";
 import { exportBundle, listCorrections, listRules, stats } from "@/services/tastelock";
 
@@ -70,11 +69,11 @@ command = "npx"
 args = ["tsx", "${repoRoot}/src/mcp/server.ts"]`;
 
   const steps = [
-    { title: "1 · Connect", body: "Point any MCP-capable agent at the TasteLock server — one config entry." },
-    { title: "2 · Read first", body: "Before working, the agent calls get_learned_context and applies your rules." },
-    { title: "3 · Get corrected", body: "When you correct it, the correction and its evidence go into HydraDB." },
-    { title: "4 · Distil", body: "SERV reads recent corrections and proposes candidate rules, skipping duplicates." },
-    { title: "5 · Validate", body: "You approve a candidate and it becomes active for every agent. Nothing self-activates." },
+    { title: "1. Connect", body: "Add the server to any MCP agent's config." },
+    { title: "2. Read", body: "The agent calls get_learned_context before it starts work." },
+    { title: "3. Correct", body: "You correct the agent. It records the correction with evidence." },
+    { title: "4. Distil", body: "SERV reads recent corrections and proposes candidate rules." },
+    { title: "5. Validate", body: "You approve a rule. It becomes active for every connected agent." },
   ];
 
   return (
@@ -88,16 +87,16 @@ args = ["tsx", "${repoRoot}/src/mcp/server.ts"]`;
             SERV reasoning
           </Badge>
           <Badge colorPalette="blue" variant="subtle">
-            MCP over stdio
+            MCP stdio
           </Badge>
         </HStack>
         <Heading size={{ base: "2xl", md: "3xl" }} letterSpacing="tight" maxWidth="820px">
-          Your agents stop repeating mistakes.
+          Corrections become rules your agents follow.
         </Heading>
         <Text fontSize={{ base: "md", md: "lg" }} color="fg.muted" maxWidth="760px">
-          TasteLock is an MCP server. When you correct an agent — Claude Code, Codex, Cursor, anything that speaks MCP
-          — the correction is written into a HydraDB graph. SERV distils those corrections into candidate rules, you
-          validate them, and from then on every agent reads the same rules before it starts work.
+          TasteLock runs as an MCP server. An agent records your correction into a HydraDB graph. SERV groups repeated
+          corrections into candidate rules. You validate a rule once, and every connected agent reads it before
+          starting work.
         </Text>
       </Stack>
 
@@ -106,34 +105,18 @@ args = ["tsx", "${repoRoot}/src/mcp/server.ts"]`;
           { label: "Corrections stored", value: String(tally?.corrections ?? 0) },
           { label: "Validated rules", value: String(tally?.rules.validated ?? 0) },
           { label: "Candidates awaiting review", value: String(tally?.rules.candidates ?? 0) },
-          {
-            label: "Graph / SERV",
-            value: graph.ok ? (servConfigured() ? "ready" : "graph only") : "offline",
-            tone: graph.ok ? undefined : "red.solid",
-          },
+          { label: "Retired rules", value: String(tally?.rules.retired ?? 0) },
         ].map((stat) => (
           <Card.Root key={stat.label} variant="subtle">
             <Card.Body gap="1">
               <Text fontSize="xs" color="fg.muted">
                 {stat.label}
               </Text>
-              <Heading size="lg" color={stat.tone}>
-                {stat.value}
-              </Heading>
+              <Heading size="lg">{stat.value}</Heading>
             </Card.Body>
           </Card.Root>
         ))}
       </SimpleGrid>
-
-      {!graph.ok && (
-        <Card.Root variant="subtle" colorPalette="red">
-          <Card.Body>
-            <Text fontSize="sm" color="fg">
-              {graph.detail}
-            </Text>
-          </Card.Body>
-        </Card.Root>
-      )}
 
       <Stack gap="5">
         <Heading size="lg">How it works</Heading>
@@ -154,10 +137,9 @@ args = ["tsx", "${repoRoot}/src/mcp/server.ts"]`;
       </Stack>
 
       <Stack gap="5">
-        <Heading size="lg">Watch it work</Heading>
+        <Heading size="lg">Try it</Heading>
         <Text fontSize="sm" color="fg.muted" maxWidth="760px">
-          Record a correction the way an agent would, then run the learning pass to see SERV turn it into a candidate
-          rule. Every write goes straight into the graph.
+          Record a correction, then run the learning pass. Both write to the graph.
         </Text>
         <DemoPanel />
       </Stack>
@@ -186,23 +168,23 @@ args = ["tsx", "${repoRoot}/src/mcp/server.ts"]`;
         </SimpleGrid>
         <Text fontSize="xs" color="fg.muted">
           {hosted
-            ? "Replace /path/to/tastelock with the directory where you cloned the repo. The server reads HydraDB and SERV settings from that directory's .env, so it works from any working directory."
-            : `The server reads HydraDB and SERV settings from ${repoRoot}/.env, so it works no matter which directory the agent launches it from.`}
+            ? "Replace /path/to/tastelock with the directory where you cloned the repo. The server reads its HydraDB and SERV settings from that directory's .env."
+            : `The server reads its HydraDB and SERV settings from ${repoRoot}/.env, so it works from any directory.`}
         </Text>
       </Stack>
 
       <Stack gap="5">
-        <Heading size="lg">Tools the agent gets</Heading>
+        <Heading size="lg">Tools</Heading>
         <SimpleGrid columns={{ base: 1, lg: 2 }} gap="6">
           <Stack gap="2">
             <Text fontSize="sm" fontWeight="semibold">
               Read
             </Text>
             <List.Root fontSize="sm" color="fg.muted" gap="1">
-              <List.Item>get_learned_context — the rules to follow before working</List.Item>
-              <List.Item>list_rules — validated, candidate and retired rules</List.Item>
-              <List.Item>list_corrections / search_corrections — the evidence trail</List.Item>
-              <List.Item>export_tastelock — portable bundle for other or cloud agents</List.Item>
+              <List.Item>get_learned_context: rules that apply to a task</List.Item>
+              <List.Item>list_rules: validated, candidate and retired rules</List.Item>
+              <List.Item>list_corrections, search_corrections: the evidence trail</List.Item>
+              <List.Item>export_tastelock: markdown bundle for another agent</List.Item>
             </List.Root>
           </Stack>
           <Stack gap="2">
@@ -210,10 +192,10 @@ args = ["tsx", "${repoRoot}/src/mcp/server.ts"]`;
               Write
             </Text>
             <List.Root fontSize="sm" color="fg.muted" gap="1">
-              <List.Item>record_correction — what it did, what you wanted, the instruction</List.Item>
-              <List.Item>record_feedback — a plain preference in your own words</List.Item>
-              <List.Item>run_learning_pass — distil corrections into candidates</List.Item>
-              <List.Item>decide_rule — validate or retire, on your say-so only</List.Item>
+              <List.Item>record_correction: what the agent did and what you wanted</List.Item>
+              <List.Item>record_feedback: a preference in your own words</List.Item>
+              <List.Item>run_learning_pass: distil corrections into candidates</List.Item>
+              <List.Item>decide_rule: validate or retire, on your decision only</List.Item>
             </List.Root>
           </Stack>
         </SimpleGrid>
@@ -223,7 +205,7 @@ args = ["tsx", "${repoRoot}/src/mcp/server.ts"]`;
         <Heading size="lg">Active rules</Heading>
         {validatedRules.length === 0 ? (
           <Text fontSize="sm" color="fg.muted">
-            No validated rules yet. Record a correction above and run the learning pass.
+            No validated rules yet.
           </Text>
         ) : (
           <Box overflowX="auto">
@@ -252,7 +234,7 @@ args = ["tsx", "${repoRoot}/src/mcp/server.ts"]`;
       </Stack>
 
       <Stack gap="5">
-        <Heading size="lg">Latest corrections</Heading>
+        <Heading size="lg">Recent corrections</Heading>
         {corrections.length === 0 ? (
           <Text fontSize="sm" color="fg.muted">
             Nothing recorded yet.
@@ -288,12 +270,11 @@ args = ["tsx", "${repoRoot}/src/mcp/server.ts"]`;
       </Stack>
 
       <Stack gap="5">
-        <Heading size="lg">Export to any agent</Heading>
+        <Heading size="lg">Export</Heading>
         <Text fontSize="sm" color="fg.muted" maxWidth="760px">
-          export_tastelock returns this markdown. Drop it into a repository as tastelock.md, hand it to a cloud agent,
-          or let another MCP client read the same graph.
+          export_tastelock returns this markdown. Use it as tastelock.md in a repository, or hand it to a cloud agent.
         </Text>
-        <CodeBlock>{bundle?.markdown ?? "HydraDB is offline — start it with pnpm db:up."}</CodeBlock>
+        <CodeBlock>{bundle?.markdown ?? "# No validated rules yet."}</CodeBlock>
       </Stack>
     </Stack>
   );
