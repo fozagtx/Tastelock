@@ -27,7 +27,7 @@ rules. A rule becomes active only when a person validates it.
 pnpm install
 pnpm db:up                     # starts the HydraDB graph-node, Bolt on :7687
 cp .env.example .env           # fill in SERV_BASE_URL, SERV_API_KEY, SERV_MODEL
-pnpm dev                       # landing page on http://localhost:3000
+pnpm dev                       # dashboard on http://localhost:3000
 ```
 
 HydraDB stores the graph in `.hydradb/`, so it survives restarts. Stop it with
@@ -103,7 +103,7 @@ src/graph/         HydraDB driver and Cypher repositories
 src/providers/     SERV reasoning provider, schema forced distillation
 src/services/      recording, learning, validation and export use cases
 src/mcp/server.ts  the MCP stdio server
-src/app/           Next.js landing page
+src/app/           Next.js dashboard: overview, corrections, rules, export
 ```
 
 ## Scripts
@@ -117,10 +117,24 @@ src/app/           Next.js landing page
 | `pnpm typecheck` | TypeScript check |
 | `pnpm build` | Production build |
 
+## Dashboard
+
+`pnpm dev` serves four views against the same graph the agents write to:
+
+| View | Purpose |
+|---|---|
+| Overview | Counts, add a correction, run the learning pass, review candidates |
+| Corrections | Every recorded correction, with search |
+| Rules | Candidates, validated and retired rules, with validate and retire actions |
+| Export | The markdown bundle for other agents, with a copy button |
+
+A rule only becomes active when you press Validate. The dashboard never activates a rule on its own.
+
 ## Notes
 
-- HydraDB runs next to your agents. It is not a hosted service. The Vercel
-  deployment serves the landing page only. To read the same graph from a hosted
-  instance, point `HYDRADB_URI` at a reachable graph-node over TLS.
+- HydraDB runs next to your agents. It is not a hosted service. Point `HYDRADB_URI`
+  at a reachable endpoint to read the same graph from a hosted dashboard. The code
+  is plain Bolt and Cypher, so it runs against HydraDB, Neo4j Aura, or any
+  compatible server.
 - There are no mocks in this codebase. Every run talks to a real HydraDB and a
   real SERV. If either is unavailable, the request fails with the reason.
