@@ -10,9 +10,7 @@ coverage/
 .env.*.local
 
 .hydradb/
-bloks-export/
 
 .DS_Store
 *.log
 .vercel
-.env*

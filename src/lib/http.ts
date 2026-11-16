@@ -33,6 +33,6 @@ export async function handle(work: () => Promise<NextResponse>): Promise<NextRes
 }
 
 export function actorFrom(request: Request, fallback = "agent"): string {
-  const header = request.headers.get("x-bloks-actor");
+  const header = request.headers.get("x-tastelock-actor");
   return header?.trim() || fallback;
 }

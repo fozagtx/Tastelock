@@ -30,8 +30,7 @@ const EnvSchema = z.object({
   SERV_MODEL: z.string().default(""),
   SERV_RESPONSE_FORMAT: z.enum(["json_schema", "json_object"]).default("json_schema"),
 
-  BLOKS_API_TOKEN: z.string().default("change-me-local-dev-token"),
-  BLOKS_API_URL: z.string().default("http://127.0.0.1:3000"),
+  TASTELOCK_API_TOKEN: z.string().default("change-me-local-dev-token"),
 });
 
 export type ServerEnv = z.infer<typeof EnvSchema>;
@@ -54,8 +53,7 @@ export function env(): ServerEnv {
       SERV_API_KEY: process.env.SERV_API_KEY,
       SERV_MODEL: process.env.SERV_MODEL,
       SERV_RESPONSE_FORMAT: process.env.SERV_RESPONSE_FORMAT,
-      BLOKS_API_TOKEN: process.env.BLOKS_API_TOKEN,
-      BLOKS_API_URL: process.env.BLOKS_API_URL,
+      TASTELOCK_API_TOKEN: process.env.TASTELOCK_API_TOKEN,
     });
   }
   return cached;

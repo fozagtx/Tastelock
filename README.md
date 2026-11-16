@@ -35,7 +35,18 @@ HydraDB stores the graph in `.hydradb/`, so it survives restarts. Stop it with
 
 ## Connect an agent
 
-### Claude Code
+### Hosted endpoint (no repo needed)
+
+The MCP server also runs as a Next.js route, so agents can connect by URL:
+
+```
+https://tastelock.vercel.app/api/mcp
+```
+
+It requires the token in `TASTELOCK_API_TOKEN` as a bearer header. Any agent that
+speaks MCP over HTTP can use it, including cloud agents.
+
+### Claude Code (local, stdio)
 
 Add this to `.mcp.json` in your project, or to `~/.claude.json` for every project:
 
