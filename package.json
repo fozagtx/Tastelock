@@ -1,0 +1,45 @@
+{
+  "name": "bloks",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "seed": "tsx scripts/seed.ts",
+    "mcp": "tsx src/mcp/server.ts",
+    "db:init": "bash scripts/db-init.sh",
+    "db:up": "bash scripts/db-init.sh && docker compose up -d hydradb",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f hydradb"
+  },
+  "dependencies": {
+    "@chakra-ui/react": "^3.38.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "neo4j-driver": "^6.3.2",
+    "next": "^16.4.6",
+    "next-themes": "^0.4.6",
+    "openai": "^7.57.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "ulid": "^3.0.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.3",
+    "vitest": "^5.1.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  }
+}

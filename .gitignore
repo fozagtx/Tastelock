@@ -1,0 +1,16 @@
+node_modules/
+.next/
+dist/
+out/
+coverage/
+*.tsbuildinfo
+
+.env
+.env.local
+.env.*.local
+
+.hydradb/
+bloks-export/
+
+.DS_Store
+*.log

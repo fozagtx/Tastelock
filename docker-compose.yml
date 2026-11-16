@@ -1,0 +1,32 @@
+services:
+  hydradb:
+    image: ghcr.io/hydra-db/hydradb:latest
+    command: ["graph-node"]
+    ports:
+      - "7687:7687" # Bolt (Neo4j-driver compatible)
+      - "8443:8443" # HTTPS / JSON query API
+      - "9090:9090" # admin: readiness + metrics
+    environment:
+      CLOUD_PROVIDER: local
+      LOCAL_PATH: /data/store
+      GRAPH_NAMESPACE: default
+      GRAPH_ID: default
+      GRAPH_CELL_ID: cell-0
+      GRAPH_CELLS: cell-0
+      GRAPH_NODE_ID: node-0
+      GRAPH_BOLT_NODE_ADDRESSES: node-0=0.0.0.0:7687
+      GRAPH_ADVERTISED_BOLT_ADDR: 127.0.0.1:7687
+      GRAPH_DATA_CACHE_DIR: /data/cache
+      GRAPH_AUTH_TOKEN_FILE: /data/auth-token
+      GRAPH_ALLOW_PLAINTEXT: "true"
+      RUST_MIN_STACK: "33554432"
+    volumes:
+      - ./.hydradb/store:/data/store
+      - ./.hydradb/cache:/data/cache
+      - ./.hydradb/auth-token:/data/auth-token:ro
+    healthcheck:
+      test: ["CMD", "graph-node", "--version"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
